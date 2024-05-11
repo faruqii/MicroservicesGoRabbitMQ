@@ -6,7 +6,6 @@ WORKDIR /go/src/app
 
 COPY . .
 
-
 RUN go mod download && go mod verify
 
 RUN go mod tidy && go mod vendor

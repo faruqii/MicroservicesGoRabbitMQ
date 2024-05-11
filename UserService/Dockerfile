@@ -6,6 +6,7 @@ WORKDIR /go/src/app
 
 COPY . .
 
+COPY .env .
 
 ENV DB_HOST=postgres
 ENV DB_PORT=5432

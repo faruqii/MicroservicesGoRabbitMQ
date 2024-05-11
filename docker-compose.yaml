@@ -10,8 +10,18 @@ services:
       POSTGRES_DB: mydatabase
     volumes:
       - db-data:/var/lib/postgresql/data
+      - ./pg_hba.conf:/etc/postgresql/pg_hba.conf
     ports:
       - 5432:5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+    networks:
+      - app
+      
 
   adminer:
     image: adminer
@@ -49,6 +59,7 @@ services:
       WAIT_SLEEP_INTERVAL: 10
       WAIT_HOST_CONNECT_TIMEOUT: 30
     depends_on:
+      - rabbitmq
       - db
       - adminer
     ports:
@@ -66,9 +77,14 @@ services:
       context: .
       dockerfile: Dockerfile
     image: merchant_service_image
+    environment:
+      RABBITMQ_HOST: host.docker.internal  # Connect to RabbitMQ running on the host machine
+      RABBITMQ_PORT: 5672  # RabbitMQ port
+      RABBITMQ_USER: guest
+      RABBITMQ_PASSWORD: guest
+      RABBITMQ_QUEUE: pubsub  # Specify the queue name
     depends_on:
-      - db
-      - adminer
+      - rabbitmq
     ports:
       - "3001:3001"
     volumes:
