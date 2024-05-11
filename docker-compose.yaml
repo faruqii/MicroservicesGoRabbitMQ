@@ -23,14 +23,14 @@ services:
     image: rabbitmq:3-management-alpine
     container_name: 'rabbitmq-local'
     ports:
-        - 5672:5672
-        - 15672:15672
+      - 5672:5672
+      - 15672:15672
     volumes:
-        - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
-        - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+      - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
     networks:
-        - rabbitmq_net
-    
+      - rabbitmq_net
+
   user_service:
     container_name: user_service
     build:
@@ -48,20 +48,17 @@ services:
       WAIT_HOSTS_TIMEOUT: 30
       WAIT_SLEEP_INTERVAL: 10
       WAIT_HOST_CONNECT_TIMEOUT: 30
-    # app has dependencies on db and adminer
-    # app will not start until db and adminer are up
     depends_on:
       - db
       - adminer
-    links:
-      - db
     ports:
       - "3000:3000"
     volumes:
       - .:/go/src/app
     networks:
-      - app    
-    command: sh -c "/wait && /server"\
+      - app
+      - rabbitmq_net
+    command: /server  # Specify the command to start the user service
 
   merchant_service:
     container_name: merchant_service
@@ -72,20 +69,19 @@ services:
     depends_on:
       - db
       - adminer
-    links:
-      - db
     ports:
       - "3001:3001"
     volumes:
       - .:/go/src/app
     networks:
-      - app    
-    command: sh -c "/wait && /server"\
+      - app
+    command: /server
 
 volumes:
-  app:
   db-data:
 
 networks:
   rabbitmq_net:
+    driver: bridge
+  app:
     driver: bridge
